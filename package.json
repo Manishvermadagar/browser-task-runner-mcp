@@ -28,7 +28,7 @@
     "test": "node bridge/selftest.js && node test/engine.test.js && node test/browser.test.js && node test/matrix.test.js && node test/mcp.test.mjs"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.12.0"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",

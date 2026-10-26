@@ -81,7 +81,7 @@ Two front ends drive the same engine:
 
 ## Requirements
 
-- Node.js 18 or newer
+- Node.js 22.12.0 or newer
 - A Chromium-based browser: Chrome, Chromium, Brave or Edge
 
 ```
@@ -390,7 +390,9 @@ terms of use.
 2. Start the bridge: `npm run bridge`, then check
    `curl -s http://127.0.0.1:8777/health`. On first run it creates a
    random pairing token in `.btr-token` (gitignored, readable only by
-   you) and prints its location.
+   you) and prints its location. On Windows, file mode 600 is not
+   enforced: the token file inherits the folder's permissions, so keep
+   the data directory inside your own user profile.
 3. **Pair:** open the extension popup, paste the contents of `.btr-token`
    into "pairing token", add any extra hosts, and click Save. Every
    bridge endpoint except `/health` rejects requests without the token,

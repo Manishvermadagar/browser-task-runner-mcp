@@ -172,7 +172,7 @@ async function main() {
   rv.submitVerdicts(rvh.run_id, { 103: { verdict: "APPROVE" } });
   await rv.act(rvh.run_id);
   const rvl = await goLive(rv, rvh.run_id);
-  assert.strictEqual(rvl.items[0].verified, false);
+  assert.strictEqual(rvl.items[0].status, "VERIFY_FAILED");
   step("verify: an off-host redirect counts as a failed verification");
 
   // ---- round-2 fixes ----
@@ -246,6 +246,33 @@ async function main() {
   assert.strictEqual((await goLive(se, sh.run_id)).items[0].verified, true);
   step("fields marked secret (the CSRF token) are used at act time but never stored, returned or logged");
 
+  // ---- round 8 ----
+  console.log("\n=== secret URLs in the dry-run log, verification failures trip the breaker ===");
+  D.reset();
+  const rootQ = rootWithSkill((s) => { s.actions.approve.urlTemplate = "/items/{id}/approve?csrf={csrfToken}"; });
+  const qe = createEngine({ root: rootQ, dataDir: makeTmp("btr-r-"), transport: makeNodeTransport(), sleep: noSleep });
+  const qh = await qe.harvest("redirect-test", ["103"]);
+  const csrfQ = (await (await fetch(D.base + "/items/103")).text()).match(/name="csrf" value="([^"]+)"/)[1];
+  qe.submitVerdicts(qh.run_id, { 103: { verdict: "APPROVE" } });
+  const qd = await qe.act(qh.run_id);
+  assert.ok(qd.items[0].would[0].url.includes("csrf=[secret]"), JSON.stringify(qd.items[0].would));
+  const qlog = fs.readFileSync(path.join(qe.dataDir, "logs/redirect-test.audit.jsonl"), "utf8");
+  assert.ok(!qlog.includes(csrfQ) && qlog.includes("csrf=[secret]"));
+  step("a secret in an action URL is redacted in the dry-run audit log, not only in the returned plan");
+
+  D.reset();
+  const rootC = rootWithSkill((s) => { s.safety.stagedRollout = [20]; s.verify.APPROVE = { urlTemplate: "/redirect-offsite", expectStatus: 200 }; });
+  const ce = createEngine({ root: rootC, dataDir: makeTmp("btr-r-"), transport: makeNodeTransport(), sleep: noSleep });
+  const cbh = await ce.harvest("redirect-test", ["101", "103", "104", "106"]);
+  ce.submitVerdicts(cbh.run_id, { 101: { verdict: "APPROVE" }, 103: { verdict: "APPROVE" }, 104: { verdict: "APPROVE" }, 106: { verdict: "APPROVE" } });
+  await ce.act(cbh.run_id);
+  const cl = await goLive(ce, cbh.run_id);
+  assert.strictEqual(cl.circuit_open, true);
+  assert.strictEqual(cl.attempted, 3);
+  assert.deepStrictEqual(cl.items.map((i) => i.status), ["VERIFY_FAILED", "VERIFY_FAILED", "VERIFY_FAILED"]);
+  assert.strictEqual((await get(D.base + "/api/items")).items.find((i) => i.id === "106").status, "pending");
+  step("three consecutive failed verifications open the circuit breaker; the fourth item is never acted on");
+
   // ---- bridge path ----
   console.log("\n=== bridge (token, origin, job policy) + extension stand-in ===");
   D.reset();
@@ -260,7 +287,9 @@ async function main() {
   const BB = `http://127.0.0.1:${BP}`;
   try {
     const token = fs.readFileSync(path.join(bdir, ".btr-token"), "utf8").trim();
-    assert.ok(/^[0-9a-f]{48}$/.test(token) && (fs.statSync(path.join(bdir, ".btr-token")).mode & 0o077) === 0);
+    assert.ok(/^[0-9a-f]{48}$/.test(token));
+    // POSIX mode bits are not enforced on Windows; there the file inherits the data dir's ACL.
+    if (process.platform !== "win32") assert.ok((fs.statSync(path.join(bdir, ".btr-token")).mode & 0o077) === 0);
     const post = (p, body, headers = {}) => fetch(BB + p, { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify(body) });
     assert.strictEqual((await post("/job", { type: "fetch", url: D.base + "/health" })).status, 401);
     assert.strictEqual((await fetch(BB + "/activity")).status, 401);

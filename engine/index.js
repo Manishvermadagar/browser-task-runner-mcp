@@ -241,7 +241,7 @@ function createEngine({ root = ROOT, dataDir = process.env.BTR_DATA_DIR || root,
           const requests = order.map((a) => ({ action: a, ...S.buildRequest(skill, a, vars) }));
           if (!live) {
             const r = { id: item.id, verdict: v.verdict, status: "DRY_RUN", would: requests.map((q) => ({ action: q.action, method: q.method, url: hideSecrets(skill, fields, q.url), body: hideSecrets(skill, fields, q.body) })) };
-            plan.push(r); audit(run, { phase: "act", id: item.id, status: "DRY_RUN", dryRun: true, detail: requests.map((q) => `${q.method} ${q.url}`).join(" ; ") });
+            plan.push(r); audit(run, { phase: "act", id: item.id, status: "DRY_RUN", dryRun: true, detail: requests.map((q) => `${q.method} ${hideSecrets(skill, fields, q.url)}`).join(" ; ") });
           } else {
             for (const q of requests) {
               const { action: _a, ...httpReq } = q;
@@ -252,10 +252,12 @@ function createEngine({ root = ROOT, dataDir = process.env.BTR_DATA_DIR || root,
             writeJson(processedFile, processed); // persisted before moving on
             const ver = await verifyOne(skill, item, v.verdict);
             run.results[item.id] = { verdict: v.verdict, actions: order, verified: ver.verified, at: processed[item.id].at };
+            if (ver.verified === false) {
+              throw Object.assign(new Error(`${order.join(" -> ")} verified=no${ver.detail ? " (" + ver.detail + ")" : ""}`), { code: "VERIFY_FAILED" });
+            }
             const r = { id: item.id, verdict: v.verdict, status: "DONE", verified: ver.verified };
             plan.push(r);
-            audit(run, { phase: "act", id: item.id, status: ver.verified === false ? "VERIFY_FAILED" : "DONE", detail: `${order.join(" -> ")} verified=${ver.verified === null ? "n/a" : ver.verified ? "yes" : "no"}${ver.detail ? " (" + ver.detail + ")" : ""}` });
-            if (ver.verified === false) errors++;
+            audit(run, { phase: "act", id: item.id, status: "DONE", detail: `${order.join(" -> ")} verified=${ver.verified === null ? "n/a" : "yes"}${ver.detail ? " (" + ver.detail + ")" : ""}` });
           }
           consecutive = 0;
         } catch (e) {
