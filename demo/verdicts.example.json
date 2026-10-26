@@ -1,0 +1,8 @@
+{
+  "101": { "verdict": "APPROVE", "reason": "genuine positive review" },
+  "102": { "verdict": "REJECT", "reason": "spam link", "note": "Advertising" },
+  "103": { "verdict": "APPROVE", "reason": "genuine mixed review" },
+  "104": { "verdict": "APPROVE", "reason": "negative but genuine" },
+  "105": { "verdict": "ESCALATE", "reason": "contains an order number and phone number" },
+  "106": { "verdict": "APPROVE", "reason": "genuine positive review" }
+}

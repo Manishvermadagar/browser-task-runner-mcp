@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Browser Task Runner (local)",
+  "version": "0.3.0",
+  "description": "Local front end for Browser Task Runner. Runs fetch and page-script jobs from the local bridge server in your logged-in browser. Load unpacked; not published.",
+  "permissions": ["alarms", "storage", "tabs"],
+  "host_permissions": [
+    "http://127.0.0.1:8777/*",
+    "http://127.0.0.1:8790/*",
+    "http://localhost:8790/*"
+  ],
+  "background": { "service_worker": "src/background.js" },
+  "action": { "default_popup": "src/popup.html", "default_title": "Browser Task Runner - status" }
+}

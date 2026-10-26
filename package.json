@@ -1,0 +1,38 @@
+{
+  "name": "browser-task-runner",
+  "version": "0.3.0",
+  "description": "Batch admin work in the browser with a human review step, plus general browser control for any MCP client. Local-only, with dry runs, staged rollout, rate limits, a circuit breaker and an audit log.",
+  "license": "MIT",
+  "type": "commonjs",
+  "bin": {
+    "browser-task-runner-mcp": "mcp/server.mjs"
+  },
+  "files": [
+    "engine",
+    "mcp",
+    "bridge",
+    "src",
+    "demo",
+    "manifest.json",
+    "README.md",
+    "SCOPE.md",
+    "SKILL-AUTHORING.md",
+    "LICENSE",
+    "NOTICE.md"
+  ],
+  "scripts": {
+    "mcp": "node mcp/server.mjs",
+    "bridge": "node bridge/server.js",
+    "demo": "node demo/server.js",
+    "job": "node bridge/job.js",
+    "test": "node bridge/selftest.js && node test/engine.test.js && node test/browser.test.js && node test/matrix.test.js && node test/mcp.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "puppeteer-core": "^25.16.0",
+    "zod": "^4.6.7"
+  }
+}

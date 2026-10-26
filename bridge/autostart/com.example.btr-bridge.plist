@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Optional macOS autostart for the bridge server (only needed if you use the
+browser extension front end). Template: replace the placeholders first.
+
+  1. Replace /ABSOLUTE/PATH/TO/node and /ABSOLUTE/PATH/TO/browser-task-runner
+     (launchd does not expand ~). `which node` prints the first one.
+  2. Optionally change the label from com.example to your own reverse domain.
+  3. cp bridge/autostart/com.example.btr-bridge.plist ~/Library/LaunchAgents/
+  4. launchctl load -w ~/Library/LaunchAgents/com.example.btr-bridge.plist
+Verify:  curl -s http://127.0.0.1:8777/health
+Remove:  launchctl unload -w ~/Library/LaunchAgents/com.example.btr-bridge.plist
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.example.btr-bridge</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/ABSOLUTE/PATH/TO/node</string>
+    <string>/ABSOLUTE/PATH/TO/browser-task-runner/bridge/server.js</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>/tmp/btr-bridge.log</string>
+  <key>StandardErrorPath</key><string>/tmp/btr-bridge.err</string>
+</dict>
+</plist>

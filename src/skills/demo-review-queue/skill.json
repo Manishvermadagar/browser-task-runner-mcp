@@ -1,0 +1,57 @@
+{
+  "id": "demo-review-queue",
+  "label": "Demo - product review moderation queue (local demo app)",
+  "baseUrl": "http://127.0.0.1:8790",
+  "list": {
+    "url": "/api/items?status=pending",
+    "itemsPath": "items",
+    "idField": "id"
+  },
+  "read": {
+    "urlTemplate": "/items/{id}",
+    "method": "GET",
+    "extract": [
+      { "name": "itemId", "type": "regex", "pattern": "data-item-id=\"(\\w+)\"", "group": 1 },
+      { "name": "status", "type": "regex", "pattern": "data-status=\"(\\w+)\"", "group": 1 },
+      { "name": "author", "type": "regex", "pattern": "<span id=\"author\">([\\s\\S]*?)</span>", "group": 1, "decodeHtmlEntities": true },
+      { "name": "rating", "type": "regex", "pattern": "<span id=\"rating\">(\\d)</span>", "group": 1 },
+      { "name": "body", "type": "regex", "pattern": "<blockquote id=\"review-body\">([\\s\\S]*?)</blockquote>", "group": 1, "decodeHtmlEntities": true },
+      { "name": "csrfToken", "type": "regexAttr", "tagPattern": "<input\\b[^>]*name=\"csrf\"[^>]*>", "attr": "value", "secret": true }
+    ],
+    "requiredExtract": ["itemId", "status", "body"],
+    "identityGuard": { "requestedIdVar": "id", "mustEqualExtract": "itemId" },
+    "contentField": "body",
+    "actOnlyWhen": { "field": "status", "equals": "pending" }
+  },
+  "actions": {
+    "approve": {
+      "urlTemplate": "/items/{id}/approve",
+      "method": "POST",
+      "bodyType": "form",
+      "requiredVars": ["csrfToken"],
+      "fields": { "csrf": "{csrfToken}", "note": "{note}" }
+    },
+    "reject": {
+      "urlTemplate": "/items/{id}/reject",
+      "method": "POST",
+      "bodyType": "form",
+      "requiredVars": ["csrfToken"],
+      "fields": { "csrf": "{csrfToken}", "note": "{note}" }
+    }
+  },
+  "actionOrder": {
+    "APPROVE": ["approve"],
+    "REJECT": ["reject"],
+    "ESCALATE": []
+  },
+  "verify": {
+    "APPROVE": { "extract": "status", "equals": "approved" },
+    "REJECT": { "extract": "status", "equals": "rejected" }
+  },
+  "safety": {
+    "rateLimitMs": 300,
+    "maxConsecutiveErrors": 3,
+    "maxBatch": 50,
+    "stagedRollout": [1, 3, 20]
+  }
+}

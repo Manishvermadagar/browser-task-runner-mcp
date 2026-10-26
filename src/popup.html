@@ -1,0 +1,51 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Browser Task Runner</title>
+<style>
+ :root{--bg:#0f1115;--fg:#e6e8ee;--dim:#8b93a7;--line:#232838;--ok:#3fb950;--bad:#f85149;--acc:#58a6ff}
+ body{margin:0;width:330px;background:var(--bg);color:var(--fg);
+      font:13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
+ header{padding:12px 14px;border-bottom:1px solid var(--line)}
+ h1{margin:0;font-size:13px;font-weight:600}
+ .sub{color:var(--dim);font-size:11px}
+ section{padding:12px 14px;border-bottom:1px solid var(--line)}
+ .row{display:flex;justify-content:space-between;gap:10px;padding:2px 0}
+ .k{color:var(--dim)}
+ .ok{color:var(--ok)} .bad{color:var(--bad)} .acc{color:var(--acc)}
+ a.btn{display:block;text-align:center;padding:9px;margin-top:4px;border-radius:6px;
+       background:var(--acc);color:#08131f;font-weight:600;text-decoration:none}
+ a.btn.alt{background:transparent;color:var(--acc);border:1px solid var(--line);font-weight:400}
+ .now{font-size:12px;color:var(--fg);word-break:break-word;min-height:32px}
+ .hint{color:var(--dim);font-size:11px;margin-top:8px}
+</style>
+<header>
+  <h1>Browser Task Runner</h1>
+  <div class="sub">status only &mdash; runs are started from the bridge tools or an MCP client</div>
+</header>
+
+<section>
+  <div class="row"><span class="k">bridge</span><span id="bridge">checking…</span></div>
+    <div class="row"><span class="k">events</span><span id="count">—</span></div>
+</section>
+
+<section>
+  <div class="k">pairing token (printed by the bridge; stored in .btr-token)</div>
+  <input id="token" type="text" autocomplete="off" spellcheck="false" style="width:100%;margin:4px 0;background:#0b0d12;color:var(--fg);border:1px solid var(--line);padding:5px">
+  <div class="k">extra allowed hosts, comma separated (localhost is always allowed)</div>
+  <input id="hosts" type="text" spellcheck="false" style="width:100%;margin:4px 0;background:#0b0d12;color:var(--fg);border:1px solid var(--line);padding:5px">
+  <a class="btn alt" id="save" href="#">Save</a>
+  <div class="hint">Each extra host also needs an entry in manifest.json host_permissions.</div>
+</section>
+
+<section>
+  <div class="k" style="margin-bottom:4px">current activity</div>
+  <div class="now" id="now">idle</div>
+</section>
+
+<section>
+  <a class="btn" id="dash" href="#" target="_blank">Open live dashboard</a>
+  <a class="btn alt" id="demo" href="http://127.0.0.1:8790/" target="_blank">Open demo app</a>
+  <div class="hint">Runs are started by the bridge tools or an MCP client, not from here.
+    The dashboard shows every item as it is processed.</div>
+</section>
+<script src="popup.js"></script>
